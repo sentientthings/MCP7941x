@@ -36,9 +36,9 @@ MCP7941x::MCP7941x()
 {
   //  Wire.setSpeed(400000);
   // Initialize the I2C bus if not already enabled
-  if (!Wire.isEnabled()) {
-      Wire.begin();
-  }
+  // if (!Wire.isEnabled()) {
+  //     Wire.begin();
+  // }
 }
 
 
@@ -115,27 +115,29 @@ void MCP7941x::setDateTime(
   byte mnth,         // 1-12
   byte yr)          // 0-99
 {
-  Wire.beginTransmission(MCP7941x_RTC_I2C_ADDR);
-  WireSend(RTC_LOCATION);
+  WITH_LOCK(Wire) {
+    Wire.beginTransmission(MCP7941x_RTC_I2C_ADDR);
+    WireSend(RTC_LOCATION);
 
-  WireSend(decToBcd(sec) & 0x7f);              // set seconds and disable clock (01111111)
-  WireSend(decToBcd(min) & 0x7f);              // set minutes (01111111)
-  WireSend(decToBcd(hr) & 0x3f);                // set hours and to 24hr clock (00111111)
-  WireSend(0x08 | (decToBcd(dyofWk) & 0x07));  // set the day and enable battery backup (00000111)|(00001000)
-  WireSend(decToBcd(dyofMnth) & 0x3f);          // set the date in mnth (00111111)
-  WireSend(decToBcd(mnth) & 0x1f);               // set the mnth (00011111)
-  WireSend(decToBcd(yr));                       // set the yr (11111111)
+    WireSend(decToBcd(sec) & 0x7f);              // set seconds and disable clock (01111111)
+    WireSend(decToBcd(min) & 0x7f);              // set minutes (01111111)
+    WireSend(decToBcd(hr) & 0x3f);                // set hours and to 24hr clock (00111111)
+    WireSend(0x08 | (decToBcd(dyofWk) & 0x07));  // set the day and enable battery backup (00000111)|(00001000)
+    WireSend(decToBcd(dyofMnth) & 0x3f);          // set the date in mnth (00111111)
+    WireSend(decToBcd(mnth) & 0x1f);               // set the mnth (00011111)
+    WireSend(decToBcd(yr));                       // set the yr (11111111)
 
-  Wire.endTransmission();
+    Wire.endTransmission();
 
-  // Start Clock:
-  Wire.beginTransmission(MCP7941x_RTC_I2C_ADDR);
-  WireSend(RTC_LOCATION);
-  WireSend(decToBcd(sec) | 0x80);     // set seconds and enable clock (10000000)
-  Wire.endTransmission();
+    // Start Clock:
+    Wire.beginTransmission(MCP7941x_RTC_I2C_ADDR);
+    WireSend(RTC_LOCATION);
+    WireSend(decToBcd(sec) | 0x80);     // set seconds and enable clock (10000000)
+    Wire.endTransmission();
+  }
 
-// Serial1.print("Set time: ");
-// Serial1.println(String(yr)+":"+String(mnth)+":"+String(dyofMnth)+":"+String(dyofWk)+":"+String(hr)+":"+String(min)+":"+String(sec));
+// Serial.print("Set time: ");
+// Serial.println(String(yr)+":"+String(mnth)+":"+String(dyofMnth)+":"+String(dyofWk)+":"+String(hr)+":"+String(min)+":"+String(sec));
 
 }
 
@@ -150,20 +152,22 @@ void MCP7941x::getDateTime(
   byte *mnth,
   byte *yr)
 {
-  Wire.beginTransmission(MCP7941x_RTC_I2C_ADDR);
-  WireSend(RTC_LOCATION);
-  Wire.endTransmission();
+  WITH_LOCK(Wire) {
+    Wire.beginTransmission(MCP7941x_RTC_I2C_ADDR);
+    WireSend(RTC_LOCATION);
+    Wire.endTransmission();
 
-  Wire.requestFrom(MCP7941x_RTC_I2C_ADDR, 7);
+    Wire.requestFrom(MCP7941x_RTC_I2C_ADDR, 7);
 
-  // A few of these need masks because certain bits are control bits
-  *sec     = bcdToDec(WireReceive() & 0x7f);  // 01111111
-  *min     = bcdToDec(WireReceive() & 0x7f);  // 01111111
-  *hr       = bcdToDec(WireReceive() & 0x3f);  // 00111111
-  *dyofWk  = bcdToDec(WireReceive() & 0x07);  // 01111111
-  *dyofMnth = bcdToDec(WireReceive() & 0x3f);  // 00111111
-  *mnth      = bcdToDec(WireReceive() & 0x1f);  // 00011111
-  *yr       = bcdToDec(WireReceive());         // 11111111
+    // A few of these need masks because certain bits are control bits
+    *sec     = bcdToDec(WireReceive() & 0x7f);  // 01111111
+    *min     = bcdToDec(WireReceive() & 0x7f);  // 01111111
+    *hr       = bcdToDec(WireReceive() & 0x3f);  // 00111111
+    *dyofWk  = bcdToDec(WireReceive() & 0x07);  // 01111111
+    *dyofMnth = bcdToDec(WireReceive() & 0x3f);  // 00111111
+    *mnth      = bcdToDec(WireReceive() & 0x1f);  // 00011111
+    *yr       = bcdToDec(WireReceive());         // 11111111
+  }
 }
 
 bool MCP7941x::powerFailed()
@@ -390,6 +394,7 @@ byte MCP7941x::getSramByte ( byte location )
 
     return WireReceive();
   }
+  return (byte)255;
 }
 
 // New timer functions here
@@ -486,7 +491,7 @@ int MCP7941x::getAlarm0UnixTime()
   byte sec;
   byte min;
   byte hr;
-  byte dyofWk;
+  //byte dyofWk;
   byte dyofMnth;
   byte mnth;
   byte yr;
@@ -501,7 +506,7 @@ int MCP7941x::getAlarm0UnixTime()
   sec     = bcdToDec(WireReceive() & 0x7f);  // 01111111
   min     = bcdToDec(WireReceive() & 0x7f);  // 01111111
   hr       = bcdToDec(WireReceive() & 0x3f);  // 00111111
-  dyofWk  = bcdToDec(WireReceive() & 0x07);  // 01111111
+  //dyofWk  = bcdToDec(WireReceive() & 0x07);  // 01111111
   dyofMnth = bcdToDec(WireReceive() & 0x3f);  // 00111111
   mnth      = bcdToDec(WireReceive() & 0x1f);  // 00011111
   yr = 0;
@@ -1038,6 +1043,7 @@ void MCP7941x::publishAlarm0Debug()
 //gets unix as defined by the external RTC
 // Note that since the MCP7941 only stores years 0-99
 // we assume time from 2000 onwards.
+// Only works to year 2037!
 uint32_t MCP7941x::rtcNow(){
 
   byte sec;
@@ -1057,7 +1063,11 @@ uint32_t MCP7941x::rtcNow(){
 		  &mnth,
 		  &yr);
 
-
+  // Deal with mktime 2038 bug
+  if (yr>37)
+  {
+    yr = 0;
+  }
 
   //declare variable
   struct tm tm;
@@ -1066,9 +1076,7 @@ uint32_t MCP7941x::rtcNow(){
   tm.tm_hour = (hr);
   tm.tm_mday = (dyofMnth);
   tm.tm_mon = (mnth)- 1;    // Assuming your month represents Jan with 1
-  // tm.tm_year = yr + 52; // for some reason... the clock is set with this year ofset....
-  tm.tm_year = yr + 100; // The above was a 4 digit yr to 2 digit year bug
-                  // The number of years since 1900 (by definition of tm)
+  tm.tm_year = yr + 100; // The number of years since 1900 (by definition of tm)
 
   time_t moment = mktime(&tm);//create epoc time_t object
 

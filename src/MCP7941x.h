@@ -42,7 +42,7 @@
 #include "Particle.h"
 
 
-enum maskValue {SEC=0b10001111, MIN=0b10011111, HOUR=0b10101111, WKDAY=0b10111111, DATE=0b11001111, ALL=0b11111111};
+enum maskValue {SEC=0b00000000, MIN=0b00010000, HOUR=0b00100000, WKDAY=0b00110000, DATE=0b01000000, ALL=0b01110000};
 // 000 = Seconds match
 // 001 = Minutes match
 // 010 = Hours match (logic takes into account 12-/24-hour operation)

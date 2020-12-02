@@ -713,27 +713,27 @@ void MCP7941x::maskAlarm0(String tim_match)
   byte mask;
   if (tim_match == String("Seconds"))
   {
-  mask = 0x8F; // Seconds (10001111)
+  mask = 0b00000000; // Seconds
   }
   else if (tim_match == String("Minutes"))
   {
-  mask = 0x9F; // Minutes (10011111)
+  mask = 0b00010000; // Minutes
   }
   else if (tim_match == String("Hours"))
   {
-  mask = 0xAF; // Hours (10101111)
+  mask = 0b00100000; // Hour
   }
   else if (tim_match == String("Day"))
   {
-  mask = 0xBF; // Day of week (10111111)
+  mask = 0b00110000; // Day of week
   }
   else if (tim_match == String("Date"))
   {
-  mask = 0xCF; // Date (11001111)
+  mask = 0b01000000; // Date
   }
   else if (tim_match == String("All"))
   {
-  mask = 0xFF; // Seconds, Minutes, Hour, Day of Week, Date and Month (11111111)
+  mask = 0b01110000; // Seconds, Minutes, Hour, Day of Week, Date and Month
   }
   else
   {
@@ -751,7 +751,7 @@ void MCP7941x::maskAlarm0(String tim_match)
   // Start Clock:
   Wire.beginTransmission(MCP7941x_RTC_I2C_ADDR);
   WireSend(WEEKDAY0_LOCATION);
-  WireSend((wkday && 0x8F) && mask); // clear mask (weekday & 0x8F) then replace
+  WireSend((wkday & 0x8F) | mask); // clear mask (weekday & 0x8F) then replace
   Wire.endTransmission();
 }
 
@@ -782,7 +782,7 @@ void MCP7941x::maskAlarm0(maskValue mask)
   // Start Clock:
   Wire.beginTransmission(MCP7941x_RTC_I2C_ADDR);
   WireSend(WEEKDAY0_LOCATION);
-  WireSend((wkdayraw && 0x8F) && mask); // clear mask (weekday & 0x8F) then replace
+  WireSend((wkdayraw & 0x8F) | mask); // clear mask (weekday & 0x8F) then replace
   Wire.endTransmission(); 
 }
 
@@ -813,7 +813,7 @@ void MCP7941x::maskAlarm1(maskValue mask)
   // Start Clock:
   Wire.beginTransmission(MCP7941x_RTC_I2C_ADDR);
   WireSend(WEEKDAY0_LOCATION);
-  WireSend((wkdayraw && 0x8F) && mask); // clear mask (weekday & 0x8F) then replace
+  WireSend((wkdayraw & 0x8F) | mask); // clear mask (weekday & 0x8F) then replace
   Wire.endTransmission(); 
 }
 
@@ -838,27 +838,27 @@ void MCP7941x::maskAlarm1(String tim_match)
   byte mask;
   if (tim_match == String("Seconds"))
   {
-  mask = 0x8F; // Seconds (10001111)
+  mask = 0b00000000; // Seconds
   }
   else if (tim_match == String("Minutes"))
   {
-  mask = 0x9F; // Minutes (10011111)
+  mask = 0b00010000; // Minutes
   }
   else if (tim_match == String("Hours"))
   {
-  mask = 0xAF; // Hours (10101111)
+  mask = 0b00100000; // Hour
   }
   else if (tim_match == String("Day"))
   {
-  mask = 0xBF; // Day of week (10111111)
+  mask = 0b00110000; // Day of week
   }
   else if (tim_match == String("Date"))
   {
-  mask = 0xCF; // Date (11001111)
+  mask = 0b01000000; // Date
   }
   else if (tim_match == String("All"))
   {
-  mask = 0xFF; // Seconds, Minutes, Hour, Day of Week, Date and Month (11111111)
+  mask = 0b01110000; // Seconds, Minutes, Hour, Day of Week, Date and Month
   }
   else
   {
@@ -876,7 +876,7 @@ void MCP7941x::maskAlarm1(String tim_match)
   // Start Clock:
   Wire.beginTransmission(MCP7941x_RTC_I2C_ADDR);
   WireSend(WEEKDAY1_LOCATION);
-  WireSend((wkday && 0x8F) && mask); // clear mask (weekday & 0x8F) then replace
+  WireSend((wkday & 0x8F) | mask); // clear mask (weekday & 0x8F) then replace
   Wire.endTransmission();
 }
 
